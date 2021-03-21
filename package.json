@@ -1,0 +1,26 @@
+{
+  "name": "image-classification",
+  "version": "1.0.0",
+  "description": "A simple example on Image Classification in Node.js with TensorFlow.js",
+  "main": "classify.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tejas77/node-image-classification.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tejas77/node-image-classification/issues"
+  },
+  "homepage": "https://github.com/tejas77/node-image-classification#readme",
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^3.3.0",
+    "jimp": "^0.16.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.22.0"
+  }
+}
