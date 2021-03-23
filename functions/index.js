@@ -2,19 +2,26 @@ const fileMiddleware = require("express-multipart-file-parser");
 const functions = require("firebase-functions");
 const express = require("express");
 const tfnode = require("@tensorflow/tfjs-node");
+
 const labels = require("./labels.json");
 
+const imageSize = 224;
 const threshold = 0.33;
 
 const app = express();
 app.use(fileMiddleware);
 
 const decodeImage = buffer =>
-  tfnode.node
-    .decodeImage(buffer, 3)
-    .cast("float32")
-    .div(255)
-    .expandDims(0);
+  resizeImage(
+    tfnode.node
+      .decodeImage(buffer, 3)
+      .cast("float32")
+      .div(255)
+      .expandDims(0)
+  );
+
+const resizeImage = image =>
+  tfnode.image.resizeBilinear(image, (size = [imageSize, imageSize]));
 
 const findTopId = predictions => predictions.indexOf(Math.max(...predictions));
 const getLabel = id => labels.find(label => label.id === id);
@@ -45,3 +52,4 @@ app.post("/", async (req, res) => {
 });
 
 exports.app = functions.https.onRequest(app);
+// app.listen(3000, () => console.log("App listening on port 3000!"));
