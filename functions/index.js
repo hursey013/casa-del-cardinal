@@ -6,7 +6,7 @@ const tfnode = require("@tensorflow/tfjs-node");
 const labels = require("./labels.json");
 
 const imageSize = 224;
-const threshold = 0.33;
+const threshold = 33;
 
 const app = express();
 app.use(fileMiddleware);
@@ -39,16 +39,13 @@ app.post("/", async (req, res) => {
   const id = findTopId(predictions);
   const label = getLabel(id);
   const score = getPercentage(predictions[id]);
+  const results = { ...label, score };
 
   if (score >= threshold && label.id !== 964) {
-    const results = { ...label, score };
-
     functions.logger.info(results);
-
-    return res.status(200).send(results);
   }
 
-  return res.status(200).send({});
+  return res.status(200).send(results);
 });
 
 exports.app = functions.https.onRequest(app);
