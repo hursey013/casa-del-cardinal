@@ -80,7 +80,7 @@ const postTweet = (media_data, results) =>
       )
     )
     .catch(error => {
-      functions.logger.error("Media upload failed");
+      functions.logger.error("Media upload failed", error);
     });
 
 app.post("/", async (req, res) => {
@@ -90,6 +90,8 @@ app.post("/", async (req, res) => {
   const label = getLabel(id);
   const score = getPercentage(predictions[id]);
   const results = { ...label, score };
+
+  functions.logger.info(results);
 
   postTweet(imageToBase64(buffer), results);
 
