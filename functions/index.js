@@ -1,3 +1,4 @@
+const a = require("indefinite");
 const fileMiddleware = require("express-multipart-file-parser");
 const functions = require("firebase-functions");
 const express = require("express");
@@ -20,6 +21,23 @@ const T = new Twit({
   access_token: functions.config().twitter.access_token,
   access_token_secret: functions.config().twitter.access_token_secret
 });
+
+const addArticle = string => a(string);
+
+const createStatus = ({ common_name, id, score }) => {
+  let status = "";
+
+  if (id !== 964) {
+    status =
+      score >= threshold
+        ? `Fairly certain ${addArticle(common_name)}`
+        : `Could be wrong, but what might be ${addArticle(common_name)}`;
+  } else {
+    status = "Can't make out the species, but this bird";
+  }
+
+  return (status += " was just spotted at the feeder!");
+};
 
 const decodeImage = buffer =>
   resizeImage(
@@ -56,13 +74,13 @@ const postTweet = (media_data, results) =>
         }
       }).then(res =>
         T.post("statuses/update", {
-          status: `Spotted a ${results.common_name.toLowerCase()} at the bird feeder!`,
+          status: createStatus(results),
           media_ids: [data.media_id_string]
         })
       )
     )
     .catch(error => {
-      console.error("Media upload failed");
+      functions.logger.error("Media upload failed");
     });
 
 app.post("/", async (req, res) => {
@@ -73,14 +91,10 @@ app.post("/", async (req, res) => {
   const score = getPercentage(predictions[id]);
   const results = { ...label, score };
 
-  if (score >= threshold && label.id !== 964) {
-    postTweet(imageToBase64(buffer), results);
-  }
-
-  functions.logger.info(results);
+  postTweet(imageToBase64(buffer), results);
 
   return res.status(200).send(results);
 });
 
-exports.app = functions.https.onRequest(app);
-// app.listen(3000, () => console.log("App listening on port 3000!"));
+// exports.app = functions.https.onRequest(app);
+app.listen(3000, () => console.log("App listening on port 3000!"));
