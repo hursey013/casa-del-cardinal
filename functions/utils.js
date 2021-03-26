@@ -1,22 +1,16 @@
 const a = require("indefinite");
 const tfnode = require("@tensorflow/tfjs-node");
 
-const { background, imageSize, threshold } = require("./config");
+const { imageSize, threshold } = require("./config");
 const labels = require("./labels.json");
 
-const createStatus = ({ common_name, id, score }) => {
-  let status = "";
-
-  if (id !== background) {
-    status =
-      score >= threshold
-        ? `Fairly certain (${score}%) ${a(common_name)}`
-        : `Could be wrong (only ${score}% sure), but what might be ${a(
-            common_name
-          )}`;
-  } else {
-    status = "Can't make out the species, but this bird";
-  }
+const createStatus = ({ common_name, score, threshold }) => {
+  let status =
+    score >= threshold
+      ? `Fairly certain (${score}%) ${a(common_name)}`
+      : `Could be wrong (only ${score}% sure), but what might be ${a(
+          common_name
+        )}`;
 
   return (status += " was just spotted at the feeder!");
 };

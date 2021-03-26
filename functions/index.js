@@ -4,7 +4,7 @@ const express = require("express");
 const tfnode = require("@tensorflow/tfjs-node");
 const Twit = require("twit");
 
-const { twitter } = require("./config");
+const { background, twitter } = require("./config");
 const {
   createStatus,
   decodeImage,
@@ -19,15 +19,13 @@ app.use(fileMiddleware);
 
 const T = new Twit(twitter);
 
-const getPredictions = async buffer =>
-  await tfnode
-    .loadGraphModel(`file://web_model/model.json`)
-    .predict(decodeImage(buffer))
-    .dataSync();
+const getPredictions = async buffer => {
+  const model = await tfnode.loadGraphModel(`file://web_model/model.json`);
+  return await model.predict(decodeImage(buffer)).dataSync();
+};
 
 const parseResults = predictions => {
   const id = findTopId(predictions);
-
   return {
     ...getLabel(id),
     score: getPercentage(predictions[id])
@@ -54,13 +52,21 @@ const postTweet = (buffer, { common_name, id, score }) =>
     });
 
 app.post("/", async ({ files }, res) => {
-  const buffer = files[0].buffer;
-  const predictions = await getPredictions(buffer);
-  const results = parseResults(predictions);
+  try {
+    const buffer = files[0].buffer;
+    const predictions = await getPredictions(buffer);
+    const results = parseResults(predictions);
 
-  postTweet(buffer, results);
+    if (results.id !== background) {
+      postTweet(buffer, results);
+    }
 
-  return res.status(200).send(results);
+    return res.status(200).send(results);
+  } catch (error) {
+    functions.logger.error(error);
+
+    return res.sendStatus(500);
+  }
 });
 
 exports.app = functions.https.onRequest(app);
