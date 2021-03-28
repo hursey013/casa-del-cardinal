@@ -32,7 +32,7 @@ const parseResults = predictions => {
   };
 };
 
-const postTweet = (buffer, { common_name, score }) =>
+const postTweet = (buffer, { common_name }) =>
   T.post("media/upload", { media_data: streamToBase64(buffer) })
     .then(({ data: { media_id_string } }) =>
       T.post("media/metadata/create", {
@@ -42,7 +42,7 @@ const postTweet = (buffer, { common_name, score }) =>
         }
       }).then(res =>
         T.post("statuses/update", {
-          status: createStatus({ common_name, score }),
+          status: createStatus({ common_name }),
           media_ids: [media_id_string]
         })
       )

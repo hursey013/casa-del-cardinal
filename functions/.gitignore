@@ -1,2 +1,3 @@
 .runtimeconfig.json
+*.jpg
 node_modules/

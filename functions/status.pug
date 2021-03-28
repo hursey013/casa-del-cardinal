@@ -1,0 +1,15 @@
+mixin intro
+  synz
+    syn
+      | well hello there! it's our friend #{bird.common_name}!
+    syn
+      | welcome to Casa del Cardinal to our #{bird.common_name} friend!
+    syn
+      | hey look! it's a #{bird.common_name}!
+
+
+mixin bird
+  | #[+intro]
+
+
+| #[+bird]

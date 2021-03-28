@@ -1607,7 +1607,7 @@
   {
     "id": 320,
     "name": "Haemorhous mexicanus",
-    "common_name": "House finch"
+    "common_name": "house finch"
   },
   {
     "id": 321,
@@ -3247,7 +3247,7 @@
   {
     "id": 648,
     "name": "Baeolophus bicolor",
-    "common_name": "Tufted titmouse"
+    "common_name": "tufted titmouse"
   },
   {
     "id": 649,
@@ -3257,7 +3257,7 @@
   {
     "id": 650,
     "name": "Melospiza melodia",
-    "common_name": "Song sparrow"
+    "common_name": "song sparrow"
   },
   {
     "id": 651,
@@ -4042,7 +4042,7 @@
   {
     "id": 807,
     "name": "Sitta carolinensis",
-    "common_name": "White-breasted nuthatch"
+    "common_name": "white-breasted nuthatch"
   },
   {
     "id": 808,
