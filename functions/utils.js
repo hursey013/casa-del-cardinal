@@ -4,7 +4,7 @@ const tfnode = require("@tensorflow/tfjs-node");
 const { imageSize, threshold } = require("./config");
 const labels = require("./labels.json");
 
-const createStatus = ({ common_name, score, threshold }) => {
+const createStatus = ({ common_name, score }) => {
   let status =
     score >= threshold
       ? `Fairly certain (${score}%) ${a(common_name)}`
