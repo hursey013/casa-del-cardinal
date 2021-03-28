@@ -1,4 +1,3 @@
-const a = require("indefinite");
 const rosaenlgPug = require("rosaenlg");
 const tfnode = require("@tensorflow/tfjs-node");
 
@@ -8,7 +7,8 @@ const labels = require("./labels.json");
 const createStatus = bird =>
   rosaenlgPug.renderFile("status.pug", {
     language: "en_US",
-    bird
+    bird,
+    threshold
   });
 
 const decodeImage = buffer =>

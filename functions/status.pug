@@ -1,12 +1,18 @@
 mixin intro
-  synz
-    syn
-      | well hello there! it's our friend #{bird.common_name}!
-    syn
-      | welcome to Casa del Cardinal to our #{bird.common_name} friend!
-    syn
-      | hey look! it's a #{bird.common_name}!
-
+  if bird.score > threshold
+    synz
+      syn
+        | well hello there! it's our feathered friend #{bird.common_name}!
+      syn
+        | welcome to Casa del Cardinal to our #{bird.common_name} friend!
+      syn
+        | hey look! it's a #{bird.common_name} stopping by for a snack!
+  else
+    synz
+      syn
+        | didn't get a great look, but i think our friend #{bird.common_name} just stopped by!
+      syn
+        | might be wrong, but it looks like #{bird.common_name} just stopped by for a visit!
 
 mixin bird
   | #[+intro]
