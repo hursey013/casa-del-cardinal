@@ -42,7 +42,7 @@ const postTweet = (buffer, results) =>
         }
       }).then(res =>
         T.post("statuses/update", {
-          status: createStatus(results),
+          status: results.common_name,
           media_ids: [media_id_string]
         })
       )
