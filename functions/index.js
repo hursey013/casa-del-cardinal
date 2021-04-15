@@ -4,7 +4,7 @@ const express = require("express");
 const tfnode = require("@tensorflow/tfjs-node");
 const Twit = require("twit");
 
-const { background, twitter } = require("./config");
+const { background, knownSpecies, twitter } = require("./config");
 const {
   createStatus,
   decodeImage,
@@ -42,7 +42,9 @@ const postTweet = (buffer, results) =>
         }
       }).then(res =>
         T.post("statuses/update", {
-          status: results.common_name,
+          status: `${results.common_name} (score: ${
+            results.score
+          }, known: ${knownSpecies.includes(results.id)})`,
           media_ids: [media_id_string]
         })
       )
