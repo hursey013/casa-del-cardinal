@@ -1,29 +1,29 @@
 mixin intro
-  if bird.score > threshold
-    if bird.id === 68
+  if results.score >= threshold
+    if results.id === 68
       synz
         syn
-          | the pride of Casa del Cardinal, the #{bird.common_name}!
+          | the pride of Casa del Cardinal, the #{results.common_name}!
         syn
-          | ah shucks, aren't i a beautiful bird?
+          | ah shucks, aren't I a beautiful bird?
         syn
-          | have you seen a better looking bird than the #{bird.common_name}?
+          | have you ever seen a better looking bird than the #{results.common_name}?
         syn
-          | the star of the show, the #{bird.common_name}!
+          | the star of the show, the #{results.common_name}!
     else
       synz
         syn
-          | well hello there! it's our feathered friend, the #{bird.common_name}!
+          | well hello there! it's our feathered friend, the #{results.common_name}!
         syn
-          | hey look! it's a #{bird.common_name} stopping by for a snack!
+          | hey look! it's a #{results.common_name} stopping by for a snack!
         syn
-          | welcome to Casa del Cardinal to our friend, the #{bird.common_name}!
+          | welcome to Casa del Cardinal to our friend, the #{results.common_name}!
   else
     synz
       syn
-        | is that you #{bird.common_name}?
+        | is that you #{results.common_name}?
       syn
-        | didn't get a great look, but i think that was our friend #{bird.common_name}.
+        | didn't get a great look, but i think that was our friend #{results.common_name}.
 
 mixin bird
   | #[+intro]

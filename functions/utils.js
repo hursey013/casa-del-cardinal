@@ -5,10 +5,10 @@ const tfnode = require("@tensorflow/tfjs-node");
 const { imageSize, threshold } = require("./config");
 const labels = require("./labels.json");
 
-const createStatus = bird =>
+const createStatus = results =>
   rosaenlgPug.renderFile("status.pug", {
     language: "en_US",
-    bird,
+    results,
     threshold
   });
 

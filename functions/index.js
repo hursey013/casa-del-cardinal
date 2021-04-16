@@ -48,9 +48,7 @@ const postTweet = (buffer, results) =>
         }
       }).then(res =>
         T.post("statuses/update", {
-          status: `${results.common_name} (score: ${
-            results.score
-          }, known: ${knownSpecies.includes(results.id)})`,
+          status: createStatus(results),
           media_ids: [media_id_string]
         })
       )
