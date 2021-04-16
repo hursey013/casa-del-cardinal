@@ -75,6 +75,8 @@ app.post("/", async ({ files }, res) => {
       ]);
     }
 
+    functions.logger.info(results);
+
     return res.status(200).send(results);
   } catch (error) {
     functions.logger.error(error);
