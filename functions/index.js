@@ -1,16 +1,18 @@
-const fileMiddleware = require("express-multipart-file-parser");
 const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 const express = require("express");
+const fileMiddleware = require("express-multipart-file-parser");
 const tfnode = require("@tensorflow/tfjs-node");
 const Twit = require("twit");
 
-const { background, knownSpecies, twitter } = require("./config");
+const { background, cooldown, knownSpecies, twitter } = require("./config");
 const {
   createStatus,
   decodeImage,
   findTopId,
   getLabel,
   getPercentage,
+  isNewEvent,
   streamToBase64
 } = require("./utils");
 
@@ -18,6 +20,10 @@ const app = express();
 app.use(fileMiddleware);
 
 const T = new Twit(twitter);
+
+admin.initializeApp();
+const db = admin.database();
+const ref = db.ref("events");
 
 const getPredictions = async buffer => {
   const model = await tfnode.loadGraphModel(`file://web_model/model.json`);
@@ -53,14 +59,20 @@ const postTweet = (buffer, results) =>
       functions.logger.error("Media upload failed", error);
     });
 
+const saveTimestamp = id => ref.child(id).push(new Date().getTime());
+
 app.post("/", async ({ files }, res) => {
   try {
     const buffer = files[0].buffer;
     const predictions = await getPredictions(buffer);
     const results = parseResults(predictions);
+    const snap = await ref.child(results.id).once("value");
 
-    if (results.id !== background) {
-      postTweet(buffer, results);
+    if (results.id !== background && isNewEvent(snap, cooldown)) {
+      await Promise.all([
+        saveTimestamp(results.id),
+        postTweet(buffer, results)
+      ]);
     }
 
     return res.status(200).send(results);

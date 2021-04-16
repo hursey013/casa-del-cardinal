@@ -1,3 +1,4 @@
+const dayjs = require("dayjs");
 const rosaenlgPug = require("rosaenlg");
 const tfnode = require("@tensorflow/tfjs-node");
 
@@ -20,6 +21,18 @@ const decodeImage = buffer =>
       .expandDims(0)
   );
 
+const isNewEvent = (snap, cooldown) => {
+  const timestamps = snap.val();
+
+  return (
+    !snap.exists() ||
+    !timestamps ||
+    dayjs(
+      timestamps[Object.keys(timestamps)[Object.keys(timestamps).length - 1]]
+    ).isBefore(dayjs().subtract(cooldown, "minutes"))
+  );
+};
+
 const streamToBase64 = stream =>
   Buffer.from(stream, "binary").toString("base64");
 
@@ -36,5 +49,6 @@ module.exports = {
   findTopId,
   getLabel,
   getPercentage,
+  isNewEvent,
   streamToBase64
 };

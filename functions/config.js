@@ -2,6 +2,9 @@ const functions = require("firebase-functions");
 require("dotenv").config();
 
 module.exports = {
+  background: 964,
+  cooldown: 1,
+  imageSize: 224,
   knownSpecies: [
     68, // northern cardinal
     909, // Carolina wren,
@@ -21,8 +24,6 @@ module.exports = {
     320, // house finch
     147 // common grackle
   ],
-  background: 964,
-  imageSize: 224,
   threshold: 33,
   twitter: {
     consumer_key: functions.config().twitter.consumer_key,
