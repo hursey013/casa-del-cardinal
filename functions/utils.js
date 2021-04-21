@@ -2,13 +2,16 @@ const dayjs = require("dayjs");
 const rosaenlgPug = require("rosaenlg");
 const tfnode = require("@tensorflow/tfjs-node");
 
-const { imageSize, threshold } = require("./config");
+const { imageSize, known, threshold } = require("./config");
 const labels = require("./labels.json");
 
-const createStatus = results =>
+const createStatus = (results, snap) =>
   rosaenlgPug.renderFile("status.pug", {
     language: "en_US",
+    known: known.includes(results.id),
+    now: new Date().getHours(),
     results,
+    snap,
     threshold
   });
 

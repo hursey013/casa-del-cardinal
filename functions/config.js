@@ -3,26 +3,26 @@ require("dotenv").config();
 
 module.exports = {
   background: 964,
-  cooldown: 1,
+  cooldown: 5,
   imageSize: 224,
-  knownSpecies: [
-    68, // northern cardinal
-    909, // Carolina wren,
-    441, // mourning dove
-    658, // Carolina chickadee
+  known: [
     3, // blue jay
-    648, // tufted titmouse
-    484, // American robin
-    182, // red-bellied woodpecker
-    730, // American goldfinch,
-    130, // downy woodpecker
-    650, // song sparrow
-    890, // northern mockingbird
-    807, // white-breasted nuthatch
-    354, // eastern bluebird
+    68, // northern cardinal
     91, // white-throated sparrow
+    130, // downy woodpecker
+    147, // common grackle
+    182, // red-bellied woodpecker
     320, // house finch
-    147 // common grackle
+    354, // eastern bluebird
+    441, // mourning dove
+    484, // American robin
+    648, // tufted titmouse
+    650, // song sparrow
+    658, // Carolina chickadee
+    730, // American goldfinch,
+    807, // white-breasted nuthatch
+    890, // northern mockingbird
+    909 // Carolina wren
   ],
   threshold: 33,
   twitter: {

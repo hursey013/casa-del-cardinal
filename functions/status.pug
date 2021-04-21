@@ -1,32 +1,59 @@
-mixin intro
-  if results.score >= threshold
-    if results.id === 68
-      synz
-        syn
-          | the pride of Casa del Cardinal, the #{results.common_name}!
-        syn
-          | ah shucks, aren't I a beautiful bird?
-        syn
-          | have you ever seen a better looking bird than the #{results.common_name}?
-        syn
-          | the star of the show, the #{results.common_name}!
+mixin main
+  if results.id === 68
+    | #[+cardinal]
+  else if known
+    if results.score >= threshold
+      | #[+friend]
     else
-      synz
-        syn
-          | well hello there! it's our feathered friend, the #{results.common_name}!
-        syn
-          | hey look! it's a #{results.common_name} stopping by for a snack!
-        syn
-          | welcome to Casa del Cardinal to our friend, the #{results.common_name}!
-  else
-    synz
-      syn
-        | is that you #{results.common_name}?
-      syn
-        | didn't get a great look, but i think that was our friend #{results.common_name}.
+      | #[+unknown]
+  else if results.score >= threshold * 2
+    | #[+rare]
 
-mixin bird
-  | #[+intro]
+mixin cardinal
+  synz
+    syn
+      | the pride of Casa del Cardinal, the #{results.common_name}!
+    syn
+      | ah shucks, aren't I beautiful?
+    syn
+      | have you seen a better looking bird?
+    syn
+      | it's me, the star of the show!
 
+mixin friend
+  synz
+    syn
+      | well hello there! it's our feathered friend, the #{results.common_name}!
+    syn
+      | hey look! it's the #{results.common_name} stopping by for a snack!
+    syn
+      | welcome to Casa del Cardinal to our friend, the #{results.common_name}!
 
-| #[+bird]
+mixin unknown
+  synz
+    syn
+      | good #[+greeting]! Is that you #{results.common_name}?
+    syn
+      | didn't get a great look, was that you #{results.common_name}?
+    syn
+      | i could be way off, but was that a #{results.common_name}?
+
+mixin rare
+  synz
+    syn
+      | woah, didn't expect to see a #{results.common_name} around here!
+    syn
+      | fancy that, a #{results.common_name}!
+
+mixin greeting
+  if now > 0
+    | morning
+  else if now > 12
+    | afternoon
+  else if now > 17
+    | evening
+
+mixin status
+  | #[+main]
+
+| #[+status]
