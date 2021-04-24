@@ -13,7 +13,7 @@ module.exports = {
     147, // common grackle
     182, // red-bellied woodpecker
     320, // house finch
-    354, // eastern bluebird
+    345, // eastern bluebird
     441, // mourning dove
     484, // American robin
     648, // tufted titmouse
