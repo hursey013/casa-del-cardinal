@@ -5,7 +5,7 @@ const fileMiddleware = require("express-multipart-file-parser");
 const tfnode = require("@tensorflow/tfjs-node");
 const Twit = require("twit");
 
-const { background, cooldown, knownSpecies, twitter } = require("./config");
+const { background, cooldown, known, threshold, twitter } = require("./config");
 const {
   createStatus,
   decodeImage,
@@ -66,7 +66,13 @@ app.post("/", async ({ files }, res) => {
     const results = parseResults(predictions);
     const snap = await ref.child(results.id).once("value");
 
-    if (results.id !== background && isNewEvent(snap, cooldown)) {
+    if (
+      results.id !== background &&
+      isNewEvent(snap, cooldown) &&
+      (results.id === 68 ||
+        known.includes(results.id) ||
+        results.score >= threshold * 2)
+    ) {
       await Promise.all([
         saveTimestamp(results.id),
         postTweet(buffer, results)
