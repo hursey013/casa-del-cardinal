@@ -1,5 +1,4 @@
 const functions = require("firebase-functions");
-require("dotenv").config();
 
 module.exports = {
   background: 964,

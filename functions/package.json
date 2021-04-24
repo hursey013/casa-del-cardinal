@@ -16,7 +16,6 @@
   "dependencies": {
     "@tensorflow/tfjs-node": "^3.3.0",
     "dayjs": "^1.10.4",
-    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-multipart-file-parser": "^0.1.2",
     "firebase-admin": "^9.2.0",
