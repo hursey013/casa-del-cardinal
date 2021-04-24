@@ -66,6 +66,9 @@ app.post("/", async ({ files }, res) => {
     const results = parseResults(predictions);
     const snap = await ref.child(results.id).once("value");
 
+    functions.logger.info(results);
+    await saveTimestamp(results.id);
+
     if (
       results.id !== background &&
       isNewEvent(snap, cooldown) &&
@@ -73,13 +76,8 @@ app.post("/", async ({ files }, res) => {
         known.includes(results.id) ||
         results.score >= threshold * 2)
     ) {
-      await Promise.all([
-        saveTimestamp(results.id),
-        postTweet(buffer, results)
-      ]);
+      await postTweet(buffer, results);
     }
-
-    functions.logger.info(results);
 
     return res.status(200).send(results);
   } catch (error) {
