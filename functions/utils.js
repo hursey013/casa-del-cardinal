@@ -5,6 +5,9 @@ const tfnode = require("@tensorflow/tfjs-node");
 const { imageSize, known, threshold } = require("./config");
 const labels = require("./labels.json");
 
+const bufferToBase64 = buffer =>
+  Buffer.from(buffer, "binary").toString("base64");
+
 const createStatus = (results, snap) =>
   rosaenlgPug.renderFile("status.pug", {
     language: "en_US",
@@ -36,9 +39,6 @@ const isNewEvent = (snap, cooldown) => {
   );
 };
 
-const streamToBase64 = stream =>
-  Buffer.from(stream, "binary").toString("base64");
-
 const resizeImage = image =>
   tfnode.image.resizeBilinear(image, (size = [imageSize, imageSize]));
 
@@ -47,11 +47,11 @@ const getLabel = id => labels.find(label => label.id === id);
 const getPercentage = score => Math.floor(score * 100);
 
 module.exports = {
+  bufferToBase64,
   createStatus,
   decodeImage,
   findTopId,
   getLabel,
   getPercentage,
-  isNewEvent,
-  streamToBase64
+  isNewEvent
 };
