@@ -1,5 +1,6 @@
 const dayjs = require("dayjs");
 const rosaenlgPug = require("rosaenlg");
+const sharp = require("sharp");
 const tfnode = require("@tensorflow/tfjs-node");
 
 const { imageSize, known, threshold } = require("./config");
@@ -17,6 +18,11 @@ const createStatus = (results, snap) =>
     snap,
     threshold
   });
+
+const cropImage = async (original, [left, top, width, height]) =>
+  sharp(original)
+    .extract({ left, top, width: width - left, height: height - top })
+    .toBuffer();
 
 const decodeImage = buffer =>
   resizeImage(
@@ -49,6 +55,7 @@ const getPercentage = score => Math.floor(score * 100);
 module.exports = {
   bufferToBase64,
   createStatus,
+  cropImage,
   decodeImage,
   findTopId,
   getLabel,

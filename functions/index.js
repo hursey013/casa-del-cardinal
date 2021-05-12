@@ -9,6 +9,7 @@ const { background, cooldown, known, threshold, twitter } = require("./config");
 const {
   bufferToBase64,
   createStatus,
+  cropImage,
   decodeImage,
   findTopId,
   getLabel,
@@ -44,32 +45,41 @@ const parseResults = predictions => {
   };
 };
 
-const postTweet = (buffer, results) =>
-  T.post("media/upload", { media_data: bufferToBase64(buffer) })
-    .then(({ data: { media_id_string } }) =>
-      T.post("media/metadata/create", {
-        media_id: media_id_string,
-        alt_text: {
-          text: results.common_name
-        }
-      }).then(res =>
-        T.post("statuses/update", {
-          status: createStatus(results),
-          media_ids: [media_id_string]
-        })
-      )
-    )
-    .catch(error => {
-      functions.logger.error("Media upload failed", error);
-    });
+const postTweet = async (cropped, original, results) => {
+  const media = await Promise.all([
+    T.post("media/upload", { media_data: bufferToBase64(cropped) }),
+    T.post("media/upload", { media_data: bufferToBase64(original) })
+  ]);
+
+  await Promise.all([
+    T.post("media/metadata/create", {
+      media_id: media[0].data.media_id_string,
+      alt_text: {
+        text: `Cropped photo of a ${results.common_name}`
+      }
+    }),
+    T.post("media/metadata/create", {
+      media_id: media[1].data.media_id_string,
+      alt_text: {
+        text: `Full size photo of a ${results.common_name}`
+      }
+    })
+  ]);
+
+  return await T.post("statuses/update", {
+    status: createStatus(results),
+    media_ids: [media[0].data.media_id_string, media[1].data.media_id_string]
+  });
+};
 
 const saveTimestamp = id => ref.child(id).push(new Date().getTime());
 
-app.post("/", async ({ body: { url } }, res) => {
+app.post("/", async ({ body: { region, url } }, res) => {
   if (url) {
     try {
-      const buffer = await getBuffer(url);
-      const predictions = await getPredictions(buffer);
+      const original = await getBuffer(url);
+      const cropped = await cropImage(original, region);
+      const predictions = await getPredictions(cropped);
       const results = parseResults(predictions);
       const snap = await ref.child(results.id).once("value");
 
@@ -79,11 +89,9 @@ app.post("/", async ({ body: { url } }, res) => {
       if (
         results.id !== background &&
         isNewEvent(snap, cooldown) &&
-        (results.id === 68 ||
-          known.includes(results.id) ||
-          results.score >= threshold * 2)
+        (known.includes(results.id) || results.score >= threshold * 2)
       ) {
-        await postTweet(buffer, results);
+        await postTweet(cropped, original, results);
       }
 
       return res.status(200).send(results);
