@@ -2,14 +2,22 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const axios = require("axios").default;
 const express = require("express");
+const fs = require("fs");
 const tfnode = require("@tensorflow/tfjs-node");
 const Twit = require("twit");
 
-const { background, cooldown, known, threshold, twitter } = require("./config");
+const {
+  background,
+  cooldown,
+  filePath,
+  known,
+  runtimeOpts,
+  threshold,
+  twitter
+} = require("./config");
 const {
   bufferToBase64,
   createStatus,
-  cropImage,
   decodeImage,
   findTopId,
   getLabel,
@@ -25,11 +33,39 @@ admin.initializeApp();
 const db = admin.database();
 const ref = db.ref("events");
 
-const getBuffer = url =>
+const downloadFile = async eventId => {
+  const writer = fs.createWriteStream(filePath);
+
+  const response = await axios({
+    method: "GET",
+    url: `https://homeassistant.bhurst.me/api/frigate/notifications/${eventId}/feeder/clip.mp4`,
+    responseType: "stream"
+  });
+
+  return new Promise((resolve, reject) => {
+    const data = response.data.pipe(writer);
+    let error = null;
+    writer.on("error", err => {
+      error = err;
+      writer.close();
+      reject(err);
+    });
+    writer.on("close", () => {
+      if (!error) {
+        resolve(filePath);
+      }
+    });
+  });
+};
+
+const getBuffer = eventId =>
   axios
-    .get(url, {
-      responseType: "arraybuffer"
-    })
+    .get(
+      `https://homeassistant.bhurst.me/api/frigate/notifications/${eventId}/snapshot.jpg?crop=1`,
+      {
+        responseType: "arraybuffer"
+      }
+    )
     .then(res => res.data);
 
 const getPredictions = async buffer => {
@@ -45,63 +81,77 @@ const parseResults = predictions => {
   };
 };
 
-const postTweet = async (cropped, original, results) => {
-  const media = await Promise.all([
-    T.post("media/upload", { media_data: bufferToBase64(cropped) }),
-    T.post("media/upload", { media_data: bufferToBase64(original) })
-  ]);
+const postTweet = async (payload, image, results) => {
+  let media_id_string;
 
-  await Promise.all([
-    T.post("media/metadata/create", {
-      media_id: media[0].data.media_id_string,
+  if (payload.end_time - payload.start_time <= 30) {
+    const video = await downloadFile(payload.id);
+    ({ media_id_string, processing_info } = await uploadVideo(video));
+  } else {
+    ({
+      data: { media_id_string }
+    } = await T.post("media/upload", { media_data: bufferToBase64(image) }));
+
+    await T.post("media/metadata/create", {
+      media_id: media_id_string,
       alt_text: {
-        text: `Cropped photo of a ${results.common_name}`
+        text: `Photo of a ${results.common_name}`
       }
-    }),
-    T.post("media/metadata/create", {
-      media_id: media[1].data.media_id_string,
-      alt_text: {
-        text: `Full size photo of a ${results.common_name}`
-      }
-    })
-  ]);
+    });
+  }
+
+  if (processing_info) {
+    await new Promise(resolve => setTimeout(resolve, 3000));
+  }
 
   return await T.post("statuses/update", {
     status: createStatus(results),
-    media_ids: [media[0].data.media_id_string, media[1].data.media_id_string]
+    media_ids: [media_id_string]
   });
 };
 
+const uploadVideo = filePath =>
+  new Promise((resolve, reject) => {
+    T.postMediaChunked({ file_path: filePath }, (err, data, response) => {
+      if (!err) {
+        try {
+          resolve(data);
+        } catch (err) {
+          console.error(err);
+          reject(err);
+        }
+      } else {
+        reject(err);
+      }
+    });
+  });
+
 const saveTimestamp = id => ref.child(id).push(new Date().getTime());
 
-app.post("/", async ({ body: { region, url } }, res) => {
-  if (url) {
-    try {
-      const original = await getBuffer(url);
-      const cropped = await cropImage(original, region);
-      const predictions = await getPredictions(cropped);
-      const results = parseResults(predictions);
-      const snap = await ref.child(results.id).once("value");
+app.post("/", async ({ body: { payload } }, res) => {
+  try {
+    const image = await getBuffer(payload.id);
+    const predictions = await getPredictions(image);
+    const results = parseResults(predictions);
+    const snap = await ref.child(results.id).once("value");
 
-      functions.logger.info(results);
-      await saveTimestamp(results.id);
+    functions.logger.info(results);
+    await saveTimestamp(results.id);
 
-      if (
-        results.id !== background &&
-        isNewEvent(snap, cooldown) &&
-        (known.includes(results.id) || results.score >= threshold * 2)
-      ) {
-        await postTweet(cropped, original, results);
-      }
-
-      return res.status(200).send(results);
-    } catch (error) {
-      functions.logger.error(error);
-
-      return res.sendStatus(500);
+    if (
+      results.id !== background &&
+      isNewEvent(snap, cooldown) &&
+      (known.includes(results.id) || results.score >= threshold * 2)
+    ) {
+      await postTweet(payload, image, results);
     }
+
+    return res.status(200).send(results);
+  } catch (error) {
+    functions.logger.error(error);
+
+    return res.sendStatus(500);
   }
-  return res.sendStatus(500);
 });
 
-exports.app = functions.https.onRequest(app);
+exports.app = functions.runWith(runtimeOpts).https.onRequest(app);

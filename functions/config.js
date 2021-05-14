@@ -3,6 +3,7 @@ const functions = require("firebase-functions");
 module.exports = {
   background: 964,
   cooldown: 5,
+  filePath: "/tmp/video.mp4",
   imageSize: 224,
   known: [
     3, // blue jay
@@ -23,6 +24,9 @@ module.exports = {
     890, // northern mockingbird
     909 // Carolina wren
   ],
+  runtimeOpts: {
+    timeoutSeconds: 300
+  },
   threshold: 33,
   twitter: {
     consumer_key: functions.config().twitter.consumer_key,
