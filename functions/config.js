@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 
 module.exports = {
+  apiUrl: "https://homeassistant.bhurst.me/api/frigate/notifications",
   background: 964,
   cooldown: 5,
   filePath: "/tmp/video.mp4",
