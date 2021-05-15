@@ -1,4 +1,5 @@
 const functions = require("firebase-functions");
+
 const admin = require("firebase-admin");
 const axios = require("axios").default;
 const express = require("express");
@@ -10,6 +11,7 @@ const { apiUrl, filePath, runtimeOpts, twitter } = require("./config");
 const {
   bufferToBase64,
   createStatus,
+  cropImage,
   decodeImage,
   isValidEvent,
   parseResults
@@ -21,18 +23,21 @@ admin.initializeApp();
 const db = admin.database();
 const ref = db.ref("events");
 
-const downloadFile = async eventId => {
-  const writer = fs.createWriteStream(filePath);
+const downloadImage = eventId =>
+  axios
+    .get(`${apiUrl}/${eventId}/snapshot.jpg`, {
+      responseType: "arraybuffer"
+    })
+    .then(res => res.data);
 
-  const response = await axios({
-    method: "GET",
-    url: `${apiUrl}/${eventId}/feeder/clip.mp4`,
+const downloadVideo = async eventId => {
+  const writer = fs.createWriteStream(filePath);
+  const response = await axios.get(`${apiUrl}/${eventId}/feeder/clip.mp4`, {
     responseType: "stream"
   });
 
   return new Promise((resolve, reject) => {
     const data = response.data.pipe(writer);
-
     let error = null;
 
     writer.on("error", err => {
@@ -49,32 +54,29 @@ const downloadFile = async eventId => {
   });
 };
 
-const downloadImage = eventId =>
-  axios
-    .get(`${apiUrl}/${eventId}/snapshot.jpg?crop=1`, {
-      responseType: "arraybuffer"
-    })
-    .then(res => res.data);
-
 const getPredictions = async buffer => {
   const model = await tfnode.loadGraphModel(`file://web_model/model.json`);
 
   return model.predict(decodeImage(buffer)).dataSync();
 };
 
-const postTweet = async (payload, buffer, results) => {
+const postTweet = async (payload, original, cropped, results) => {
+  const randomImage = Math.random() < 0.5 ? original : cropped;
   let media_id_string;
 
   if (Math.random() < 0.5) {
-    const video = await downloadFile(payload.id);
-    ({ media_id_string } = await uploadVideo(video, buffer));
-  } else {
-    ({
-      data: { media_id_string }
-    } = await uploadImage(buffer));
-  }
+    try {
+      const video = await downloadVideo(payload.id);
 
-  await new Promise(resolve => setTimeout(resolve, 10000));
+      ({ media_id_string } = await uploadVideo(video));
+
+      await new Promise(resolve => setTimeout(resolve, 1000 * 5));
+    } catch (err) {
+      media_id_string = await uploadImage(randomImage, results);
+    }
+  } else {
+    media_id_string = await uploadImage(randomImage, results);
+  }
 
   return T.post("statuses/update", {
     status: createStatus(results),
@@ -82,39 +84,61 @@ const postTweet = async (payload, buffer, results) => {
   });
 };
 
-const uploadImage = buffer =>
-  T.post("media/upload", {
+const uploadImage = async (buffer, results) => {
+  const {
+    data: { media_id_string }
+  } = await T.post("media/upload", {
     media_data: bufferToBase64(buffer)
   });
 
-const uploadVideo = (filePath, buffer) =>
-  new Promise((resolve, reject) => {
-    T.postMediaChunked({ file_path: filePath }, async (err, data, response) => {
-      if (!err) {
-        resolve(data);
-      } else {
-        const data = await uploadImage(buffer);
-
-        functions.logger.error(err);
-        resolve(data);
-      }
-    });
+  await T.post("media/metadata/create", {
+    media_id: media_id_string,
+    alt_text: {
+      text: `Photo of a ${results.common_name}`
+    }
   });
+
+  return media_id_string;
+};
+
+const uploadVideo = async (filePath, buffer) => {
+  return new Promise((resolve, reject) => {
+    try {
+      T.postMediaChunked({ file_path: filePath }, (error, data, response) => {
+        if (!error) {
+          try {
+            resolve(data);
+          } catch (error) {
+            functions.logger.error(error);
+            reject(error);
+          }
+        } else {
+          reject(error);
+        }
+      });
+    } catch (error) {
+      functions.logger.error(error);
+      reject(error);
+    }
+  });
+};
 
 const saveTimestamp = id => ref.child(id).push(new Date().getTime());
 
 app.post("/", async ({ body: { after: payload } }, res) => {
   try {
-    const buffer = await downloadImage(payload.id);
-    const predictions = await getPredictions(buffer);
+    const original = await downloadImage(payload.id);
+    const cropped = await cropImage(original, payload.region);
+    const predictions = await getPredictions(cropped);
     const results = parseResults(predictions);
     const snap = await ref.child(results.id).once("value");
 
     functions.logger.info(results);
+
     saveTimestamp(results.id); // Save timestamp to RDB
 
     if (isValidEvent(results, snap)) {
-      await postTweet(payload, buffer, results); // Send tweet
+      await postTweet(payload, original, cropped, results); // Send tweet
     }
 
     return res.sendStatus(200);

@@ -1,5 +1,6 @@
 const dayjs = require("dayjs");
 const rosaenlgPug = require("rosaenlg");
+const sharp = require("sharp");
 const tfnode = require("@tensorflow/tfjs-node");
 
 const {
@@ -24,6 +25,11 @@ const createStatus = (results, snap) =>
     threshold
   });
 
+const cropImage = async (original, [left, top, width, height]) =>
+  sharp(original)
+    .extract({ left, top, width: width - left, height: height - top })
+    .toBuffer();
+
 const decodeImage = buffer =>
   resizeImage(
     tfnode.node
@@ -32,6 +38,10 @@ const decodeImage = buffer =>
       .div(255)
       .expandDims(0)
   );
+
+const findTopId = predictions => predictions.indexOf(Math.max(...predictions));
+const getLabel = id => labels.find(label => label.id === id);
+const getPercentage = score => Math.floor(score * 100);
 
 const isNewEvent = (snap, cooldown) => {
   const timestamps = snap.val();
@@ -50,13 +60,6 @@ const isValidEvent = (results, snap) =>
   isNewEvent(snap, cooldown) &&
   (known.includes(results.id) || results.score >= threshold * 2);
 
-const resizeImage = image =>
-  tfnode.image.resizeBilinear(image, (size = [imageSize, imageSize]));
-
-const findTopId = predictions => predictions.indexOf(Math.max(...predictions));
-const getLabel = id => labels.find(label => label.id === id);
-const getPercentage = score => Math.floor(score * 100);
-
 const parseResults = predictions => {
   const id = findTopId(predictions);
 
@@ -66,9 +69,13 @@ const parseResults = predictions => {
   };
 };
 
+const resizeImage = image =>
+  tfnode.image.resizeBilinear(image, (size = [imageSize, imageSize]));
+
 module.exports = {
   bufferToBase64,
   createStatus,
+  cropImage,
   decodeImage,
   isValidEvent,
   parseResults
