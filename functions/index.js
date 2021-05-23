@@ -11,7 +11,6 @@ const { apiUrl, filePath, runtimeOpts, twitter } = require("./config");
 const {
   bufferToBase64,
   createStatus,
-  cropImage,
   decodeImage,
   isValidEvent,
   parseResults
@@ -25,7 +24,7 @@ const ref = db.ref("events");
 
 const downloadImage = eventId =>
   axios
-    .get(`${apiUrl}/${eventId}/snapshot.jpg`, {
+    .get(`${apiUrl}/${eventId}/snapshot.jpg?crop=1`, {
       responseType: "arraybuffer"
     })
     .then(res => res.data);
@@ -60,8 +59,7 @@ const getPredictions = async buffer => {
   return model.predict(decodeImage(buffer)).dataSync();
 };
 
-const postTweet = async (payload, original, cropped, results) => {
-  const randomImage = Math.random() < 0.5 ? original : cropped;
+const postTweet = async (payload, image, results) => {
   let media_id_string;
 
   if (Math.random() < 0.5) {
@@ -72,10 +70,10 @@ const postTweet = async (payload, original, cropped, results) => {
 
       await new Promise(resolve => setTimeout(resolve, 1000 * 5));
     } catch (err) {
-      media_id_string = await uploadImage(randomImage, results);
+      media_id_string = await uploadImage(image, results);
     }
   } else {
-    media_id_string = await uploadImage(randomImage, results);
+    media_id_string = await uploadImage(image, results);
   }
 
   return T.post("statuses/update", {
@@ -127,18 +125,17 @@ const saveTimestamp = id => ref.child(id).push(new Date().getTime());
 
 app.post("/", async ({ body: { after: payload } }, res) => {
   try {
-    const original = await downloadImage(payload.id);
-    const cropped = await cropImage(original, payload.region);
-    const predictions = await getPredictions(cropped);
+    const image = await downloadImage(payload.id);
+    const predictions = await getPredictions(image);
     const results = parseResults(predictions);
     const snap = await ref.child(results.id).once("value");
 
-    functions.logger.info(results);
+    functions.logger.info(results, payload);
 
     saveTimestamp(results.id); // Save timestamp to RDB
 
     if (isValidEvent(results, snap)) {
-      await postTweet(payload, original, cropped, results); // Send tweet
+      await postTweet(payload, image, results); // Send tweet
     }
 
     return res.sendStatus(200);
