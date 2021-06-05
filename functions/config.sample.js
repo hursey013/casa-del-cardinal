@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 
 module.exports = {
-  apiUrl: "https://homeassistant.bhurst.me", // Public URL to Home Assitant
+  apiUrl: "https://homeassistant.myserver.com", // Public URL to Home Assitant
   background: 964,
   cooldown: 5, // How many minutes to wait before reposting same species
   filePath: "/tmp/video.mp4",

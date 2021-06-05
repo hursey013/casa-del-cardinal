@@ -24,16 +24,19 @@ const ref = db.ref("events");
 
 const downloadImage = eventId =>
   axios
-    .get(`${apiUrl}/${eventId}/snapshot.jpg?crop=1`, {
+    .get(`${apiUrl}/api/frigate/notifications/${eventId}/snapshot.jpg?crop=1`, {
       responseType: "arraybuffer"
     })
     .then(res => res.data);
 
 const downloadVideo = async eventId => {
   const writer = fs.createWriteStream(filePath);
-  const response = await axios.get(`${apiUrl}/${eventId}/feeder/clip.mp4`, {
-    responseType: "stream"
-  });
+  const response = await axios.get(
+    `${apiUrl}/api/frigate/notifications/${eventId}/feeder/clip.mp4`,
+    {
+      responseType: "stream"
+    }
+  );
 
   return new Promise((resolve, reject) => {
     const data = response.data.pipe(writer);
@@ -134,7 +137,7 @@ app.post("/", async ({ body: { after: payload } }, res) => {
 
     saveTimestamp(results.id); // Save timestamp to RDB
 
-    if (isValidEvent(results, snap)) {
+    if (Object.values(twitter).length && isValidEvent(results, snap)) {
       await postTweet(payload, image, results); // Send tweet
     }
 

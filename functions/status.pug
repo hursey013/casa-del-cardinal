@@ -2,11 +2,11 @@ mixin main
   if results.id === 68
     | #[+cardinal]
   else if known
-    if results.score >= threshold
+    if results.score >= threshold / 2
       | #[+friend]
     else
       | #[+unknown]
-  else if results.score >= threshold * 2
+  else if results.score >= threshold
     | #[+rare]
 
 mixin cardinal

@@ -14,13 +14,12 @@ const labels = require("./labels.json");
 const bufferToBase64 = buffer =>
   Buffer.from(buffer, "binary").toString("base64");
 
-const createStatus = (results, snap) =>
+const createStatus = results =>
   rosaenlgPug.renderFile("status.pug", {
     language: "en_US",
     known: known.includes(results.id),
     now: new Date().getHours(),
     results,
-    snap,
     threshold
   });
 
@@ -52,7 +51,7 @@ const isNewEvent = (snap, cooldown) => {
 const isValidEvent = (results, snap) =>
   results.id !== background &&
   isNewEvent(snap, cooldown) &&
-  (known.includes(results.id) || results.score >= threshold * 2);
+  (known.includes(results.id) || results.score >= threshold);
 
 const parseResults = predictions => {
   const id = findTopId(predictions);
