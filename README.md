@@ -4,7 +4,7 @@
 
 ## Introduction
 
-`casadelcardinal` is a Firebase Cloud Function and Tensorflow.js object detection model which provide an API endpoint to identify the species of a bird in given q image. The results are stored in a Firebase Realtime Database and passed to the Twitter API to update the connected account's status.
+`casadelcardinal` is a Firebase Cloud Function and Tensorflow.js bird classification model which provides an API endpoint to identify the species in a given image. The results are stored in a Firebase Realtime Database and passed to the Twitter API to update the connected account's status.
 
 ## Requirements
 
@@ -39,21 +39,21 @@
 
 ### Customize function
 
-There are a number of variables which can be customized within the function. Begin by copying config.sample.js to config.js.
+There are a number of variables which can be customized within the function. Begin by copying `config.sample.js` to `config.js`.
 
-- `apiUrl` - set to your public Home Assistant URL
-- `cooldown` - number of minutes to wait before reposting the same species
-- `known` - IDs of species includes in array will always be considered valid
-- `threshold` - if not included in `known`, the score must be above this threshold to be valid
+- `apiUrl` (string) - set to your public Home Assistant URL
+- `cooldown` (number) - minutes to wait before reposting the same species
+- `known` - (array) - IDs of species which will always be considered valid
+- `threshold` (number) - if not included in `known`, the score must be above this threshold to be valid
 
 `casadelcardinal` uses [RosaeNLG](https://rosaenlg.org/), a Natural Language Generation library, to generate the text for the Twitter status updates. For more information about the syntax used, visit [RosaeNLG](https://rosaenlg.org/).
 
 Within the template, the following values can be used:
 
-- `known` - boolean, is the species included in the `known` array
-- `now` - number, the current hour (from 0 to 23)
-- `results` - object, includes the following keys: `id`, `name`, `common_name`, `score`
-- `threshold` - number, value set in config.js
+- `known` (boolean) - is the species included in the `known` array
+- `now` (number) - the current hour (from 0 to 23)
+- `results` (object) - includes the following keys: `id`, `name`, `common_name`, `score`
+- `threshold` (number) - value set in config.js
 
 ### Deploy the app to production
 
@@ -70,7 +70,9 @@ https://<your-project-id>.firebaseapp.com/app
 The steps to configure Frigate will vary based on your setup. Review the [Frigate docs](https://blakeblackshear.github.io/frigate/) for more information. The following settings should be included to support `casadelcardinal`:
 
 ```
+
 ...
+
 mqtt:
   host: xxx.xxx.xxx.xxx
 clips:
@@ -99,7 +101,9 @@ cameras:
       filters:
         bird:
           min_area: 90000
+
 ...
+
 ```
 
 ### Create Home Assistant automation
