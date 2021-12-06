@@ -46,12 +46,12 @@ mixin rare
       | fancy that, a #{results.common_name}!
 
 mixin greeting
-  if now > 0
-    | morning
+  if now > 17
+    | evening
   else if now > 12
     | afternoon
-  else if now > 17
-    | evening
+  else if now > 0
+    | morning
 
 mixin status
   | #[+main]

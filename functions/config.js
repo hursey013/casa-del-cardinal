@@ -11,18 +11,13 @@ module.exports = {
     68, // northern cardinal
     91, // white-throated sparrow
     130, // downy woodpecker
-    147, // common grackle
-    182, // red-bellied woodpecker
     320, // house finch
     345, // eastern bluebird
-    441, // mourning dove
-    484, // American robin
     648, // tufted titmouse
     650, // song sparrow
     658, // Carolina chickadee
     730, // American goldfinch,
     807, // white-breasted nuthatch
-    890, // northern mockingbird
     909 // Carolina wren
   ],
   runtimeOpts: {

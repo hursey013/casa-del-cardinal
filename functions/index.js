@@ -17,8 +17,11 @@ const {
 } = require("./utils");
 
 const app = express(express.json());
+
 const T = new Twit(twitter);
+
 admin.initializeApp();
+
 const db = admin.database();
 const ref = db.ref("events");
 
@@ -102,8 +105,8 @@ const uploadImage = async (buffer, results) => {
   return media_id_string;
 };
 
-const uploadVideo = async (filePath, buffer) => {
-  return new Promise((resolve, reject) => {
+const uploadVideo = async (filePath, buffer) =>
+  new Promise((resolve, reject) => {
     try {
       T.postMediaChunked({ file_path: filePath }, (error, data, response) => {
         if (!error) {
@@ -122,7 +125,6 @@ const uploadVideo = async (filePath, buffer) => {
       reject(error);
     }
   });
-};
 
 const saveTimestamp = id => ref.child(id).push(new Date().getTime());
 
